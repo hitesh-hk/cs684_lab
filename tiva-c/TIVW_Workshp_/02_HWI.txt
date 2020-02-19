@@ -1,0 +1,61 @@
+/* XDCtools Header files */
+#include <xdc/std.h>
+#include <xdc/runtime/System.h>
+#include <xdc/runtime/Log.h>
+#include <xdc/cfg/global.h>
+
+/* BIOS Header files */
+#include <ti/sysbios/BIOS.h>
+#include <ti/sysbios/knl/Task.h>
+
+/* TI-RTOS Header files */
+// #include <ti/drivers/EMAC.h>
+#include <ti/drivers/GPIO.h>
+// #include <ti/drivers/I2C.h>
+// #include <ti/drivers/SDSPI.h>
+// #include <ti/drivers/SPI.h>
+// #include <ti/drivers/UART.h>
+// #include <ti/drivers/USBMSCHFatFs.h>
+// #include <ti/drivers/Watchdog.h>
+// #include <ti/drivers/WiFi.h>
+
+/* Board Header file */
+#include "Board.h"
+#include <ti/ndk/inc/netmain.h>
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "inc/tm4c123gh6pm.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/gpio.h"
+#include "driverlib/timer.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/adc.h"
+
+int x=0x00;
+
+int main(void)
+{
+	//Set CPU Clock to 40MHz. 400MHz PLL/2 = 200 DIV 10 = 20MHz
+	SysCtlClockSet(SYSCTL_SYSDIV_10|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+	TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
+	TimerLoadSet(TIMER2_BASE, TIMER_A, 120000000);
+	TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+	TimerEnable(TIMER2_BASE, TIMER_A);
+	BIOS_start();
+}
+
+void blue(void) //hwi 39
+{
+	TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+
+	x^=0x04;
+	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,x);
+}
